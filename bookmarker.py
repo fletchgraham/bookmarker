@@ -26,10 +26,6 @@ import random
 # file base name
 # type
 
-# VIEW
-# treeview on right
-# buttons on left
-
 class Model():
     def __init__(self):
         self.bookmarks = []
@@ -71,10 +67,20 @@ def create():
 
 def edit():
     print('edit')
-    # open form, populate with highlighted bookmark's data
-    # model updates bookmark at that index
-    # pickle self
-    # update tree
+    try:
+        selected_index = tree.index(tree.selection()[0])
+    except:
+        return
+
+    bm = model.bookmarks[selected_index]
+    bm['name'] = simpledialog.askstring(
+        'Name the Bookmark',
+        'give a name',
+        initialvalue=bm['name']
+    )
+
+    model.save()
+    update_tree()
 
 def delete():
     print('delete')
