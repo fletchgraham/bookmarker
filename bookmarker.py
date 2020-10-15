@@ -83,9 +83,61 @@ def delete():
     model.save()
     update_tree()
 
+def version_split(filename):
+    """Return a tuple with version suffix
+    (name, v_suffix, ext)
+    """
+
+    name, ext = os.path.splitext(filename)
+    chars = ['v', '-', '_']
+    name = name
+    v_suffix = ''
+    last_char = name[-1]
+    saw_a_v = False
+    while last_char.isdigit() and not saw_a_v or last_char.lower() in chars:
+        if last_char.lower() == 'v':
+            saw_a_v = True
+        v_suffix = name[-1] + v_suffix
+        name = name[:-1]
+        last_char = name[-1]
+
+    return name, v_suffix, ext
+
+def v_suffix_to_int(v_string):
+    """turn a version suffix into an integer"""
+    digits = ''.join([x for x in v_string if x.isdigit()])
+    return int(digits)
+
+def get_latest_version(filepath):
+    """Return path to the latest version of the provided filepath"""
+    dirname = os.path.dirname(filepath)
+    basename = os.path.basename(filepath)
+    name, v_suffix, ext = version_split(basename)
+    
+    files = [
+        f for f in os.listdir(dirname)
+        if not os.path.isdir(f)
+        and os.path.splitext(f)[1] == ext
+        and name in f
+    ]
+
+    latest = sorted(
+        files,
+        key=lambda x: v_suffix_to_int(version_split(x)[1])
+        )[-1]
+    
+    return os.path.join(dirname, latest)
+
 def open_file():
     print('open')
-    # to do
+    for i in tree.selection():
+        index = tree.index(i)
+        fp = model.bookmarks[index].get('filepath')
+        try:
+            latest_version = get_latest_version(fp)
+        except:
+            latest_version = fp
+        os.startfile(latest_version)
 
 def open_location():
     print('open location')
@@ -96,7 +148,6 @@ def open_location():
     # update last opened for that bookmark
     # pickle self
     # update the tree
-
 
 model = Model()
 
