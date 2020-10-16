@@ -1,8 +1,10 @@
 import os
 import json
+import time
 import tkinter as tk
 from tkinter import filedialog
 from tkinter import simpledialog
+from tkinter import messagebox
 import tkinter.ttk as ttk
 
 import random
@@ -48,7 +50,16 @@ class Model():
             ]
     
     def create(self, bm):
+        bm['last_opened'] = time.time()
         self.bookmarks.append(bm)
+
+    def sort_bms(self, key=None, reverse=False):
+        key = key or 'last_opened'
+        self.bookmarks = sorted(
+            self.bookmarks,
+            key = lambda x: x.get(key) or 1,
+            reverse=reverse
+        )
 
 def update_tree():
     tree.delete(*tree.get_children())
@@ -62,10 +73,11 @@ def create():
     bm['filepath'] = filedialog.askopenfilename()
     bm['name'] = simpledialog.askstring('Name the Bookmark','give a name')
     model.create(bm)
+    model.sort_bms(reverse=True)
     model.save()
     update_tree()
 
-def edit():
+def edit(event=None):
     print('edit')
     try:
         selected_index = tree.index(tree.selection()[0])
@@ -73,11 +85,15 @@ def edit():
         return
 
     bm = model.bookmarks[selected_index]
-    bm['name'] = simpledialog.askstring(
+
+    answer = simpledialog.askstring(
         'Name the Bookmark',
         'give a name',
         initialvalue=bm['name']
     )
+
+    if answer:
+        bm['name'] = answer
 
     model.save()
     update_tree()
@@ -85,7 +101,11 @@ def edit():
 def delete():
     print('delete')
     indicies = [tree.index(x) for x in tree.selection()]
-    model.delete_indicies(indicies)
+    answer = messagebox.askquestion("Delete", "Are You Sure?", icon='warning')
+
+    if answer == 'yes':
+        model.delete_indicies(indicies)
+
     model.save()
     update_tree()
 
@@ -134,29 +154,37 @@ def get_latest_version(filepath):
     
     return os.path.join(dirname, latest)
 
-def open_file():
+def open_file(event=None):
     print('open')
     for i in tree.selection():
         index = tree.index(i)
-        fp = model.bookmarks[index].get('filepath')
+        bm = model.bookmarks[index]
+        fp = bm.get('filepath')
         try:
             latest_version = get_latest_version(fp)
         except:
             latest_version = fp
         os.startfile(latest_version)
+        bm['last_opened'] = time.time()
+    
+    model.sort_bms(reverse=True)
+    model.save()
+    update_tree()
 
-def open_location():
+def open_location(event=None):
     print('open location')
     for i in tree.selection():
         index = tree.index(i)
-        fp = model.bookmarks[index].get('filepath')
+        bm = model.bookmarks[index]
+        fp = bm.get('filepath')
         os.startfile(os.path.dirname(fp))
-    # update last opened for that bookmark
-    # pickle self
-    # update the tree
+        bm['last_opened'] = time.time()
+
+    model.sort_bms(reverse=True)
+    model.save()
+    update_tree()
 
 model = Model()
-
 window = tk.Tk()
 window.title("Bookmarker")
 window.rowconfigure(0, minsize=800, weight=1)
@@ -173,6 +201,11 @@ btn_open_loc = tk.Button(fr_buttons, text="Open Location", command=open_location
 btn_create = tk.Button(fr_buttons, text="Create", command=create)
 btn_edit = tk.Button(fr_buttons, text="Edit", command=edit)
 btn_delete = tk.Button(fr_buttons, text="Delete", command=delete)
+
+window.bind("<Return>", open_file)
+window.bind("<Shift_L><Return>", open_location)
+window.bind("<Shift_R><Return>", open_location)
+window.bind("<F2>", edit)
 
 btns = [
     btn_open,
