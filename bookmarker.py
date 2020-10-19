@@ -71,7 +71,11 @@ def create():
     print('create')
     bm = {}
     bm['filepath'] = filedialog.askopenfilename()
+    if not bm.get('filepath'):
+        return 
     bm['name'] = simpledialog.askstring('Name the Bookmark','give a name')
+    if not bm.get('name'):
+        return
     model.create(bm)
     model.sort_bms(reverse=True)
     model.save()
