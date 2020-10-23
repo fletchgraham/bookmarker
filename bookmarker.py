@@ -48,6 +48,12 @@ class Model():
             x for i, x in enumerate(self.bookmarks)
             if not i in indicies_list
             ]
+
+    def delete_by_names(self, names):
+        self.bookmarks = [
+            x for x in self.bookmarks
+            if x.get('name') not in names
+        ]
     
     def create(self, bm):
         bm['last_opened'] = time.time()
@@ -60,6 +66,12 @@ class Model():
             key = lambda x: x.get(key) or 1,
             reverse=reverse
         )
+
+    def get_bm_by_name(self, name):
+        for b in self.bookmarks:
+            if name == b.get('name'):
+                return b
+        return None
 
 def update_tree(*args):
 
@@ -76,6 +88,12 @@ def update_tree(*args):
     for b in working_list:
         tree.insert('', 'end', text=b['name'])
 
+    items_left = tree.get_children()
+    if not items_left:
+        return
+    
+    tree.selection_set(items_left[0])
+
 def create():
     print('create')
     bm = {}
@@ -90,14 +108,17 @@ def create():
     model.save()
     update_tree()
 
+
 def edit(event=None):
     print('edit')
-    try:
-        selected_index = tree.index(tree.selection()[0])
-    except:
-        return
 
-    bm = model.bookmarks[selected_index]
+    selected_items = tree.selection()
+    if not selected_items:
+        return
+    
+    selected_name = tree.item(selected_items[0])['text']
+
+    bm = model.get_bm_by_name(selected_name)
 
     answer = simpledialog.askstring(
         'Name the Bookmark',
@@ -112,12 +133,15 @@ def edit(event=None):
     update_tree()
 
 def delete():
-    print('delete')
-    indicies = [tree.index(x) for x in tree.selection()]
+    selected_items = tree.selection()
+    if not selected_items:
+        return
+
+    names = [tree.item(x)['text'] for x in tree.selection()]
     answer = messagebox.askquestion("Delete", "Are You Sure?", icon='warning')
 
     if answer == 'yes':
-        model.delete_indicies(indicies)
+        model.delete_by_names(names)
 
     model.save()
     update_tree()
@@ -170,8 +194,8 @@ def get_latest_version(filepath):
 def open_file(event=None):
     print('open')
     for i in tree.selection():
-        index = tree.index(i)
-        bm = model.bookmarks[index]
+        name = tree.item(i)['text']
+        bm = model.get_bm_by_name(name)
         fp = bm.get('filepath')
         try:
             latest_version = get_latest_version(fp)
@@ -187,8 +211,8 @@ def open_file(event=None):
 def open_location(event=None):
     print('open location')
     for i in tree.selection():
-        index = tree.index(i)
-        bm = model.bookmarks[index]
+        name = tree.item(i)['text']
+        bm = model.get_bm_by_name(name)
         fp = bm.get('filepath')
         os.startfile(os.path.dirname(fp))
         bm['last_opened'] = time.time()
