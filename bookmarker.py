@@ -61,10 +61,19 @@ class Model():
             reverse=reverse
         )
 
-def update_tree():
+def update_tree(*args):
+
+    filter_by = search_field_var.get().lower()
+
+    working_list = [
+        b for b in model.bookmarks
+        if not filter_by
+        or filter_by in b.get('name').lower()
+        ]
+
     tree.delete(*tree.get_children())
 
-    for b in model.bookmarks:
+    for b in working_list:
         tree.insert('', 'end', text=b['name'])
 
 def create():
@@ -191,8 +200,7 @@ def open_location(event=None):
 model = Model()
 window = tk.Tk()
 window.title("Bookmarker")
-window.rowconfigure(0, minsize=800, weight=1)
-window.columnconfigure(1, minsize=800, weight=1)
+window.geometry('600x1200')
 
 tree = ttk.Treeview(window)
 s = ttk.Style()
@@ -205,6 +213,10 @@ btn_open_loc = tk.Button(fr_buttons, text="Open Location", command=open_location
 btn_create = tk.Button(fr_buttons, text="Create", command=create)
 btn_edit = tk.Button(fr_buttons, text="Edit", command=edit)
 btn_delete = tk.Button(fr_buttons, text="Delete", command=delete)
+
+search_field_var = tk.StringVar()
+search_field = tk.Entry(textvariable=search_field_var)
+search_field_var.trace_add('write', update_tree)
 
 window.bind("<Return>", open_file)
 window.bind("<Shift_L><Return>", open_location)
@@ -220,10 +232,12 @@ btns = [
 ]
 
 for btn in btns:
-    btn.pack(fill=tk.X)
+    btn.pack(side=tk.LEFT)
+fr_buttons.pack(fill=tk.X)
 
-fr_buttons.grid(row=0, column=0, sticky="ns")
-tree.grid(row=0, column=1, sticky="nsew")
+search_field.pack(fill=tk.X)
+
+tree.pack(expand=True, fill=tk.BOTH)
 update_tree()
 
 window.mainloop()
