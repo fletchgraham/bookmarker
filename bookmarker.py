@@ -9,25 +9,6 @@ import tkinter.ttk as ttk
 
 import random
 
-# SPEC
-# show a list of bookmarks, last opened on top
-# add bookmark
-# remove bookmark
-# edit bookmark
-# open latest version of bookmarked file
-# open bookmark location in explorer
-
-# MODEL
-# could be a deque of bookmarks
-# can pickle itself
-
-# BOOKMARK
-# a dictionary of 
-# name
-# dir path
-# file base name
-# type
-
 class Model():
     def __init__(self):
         self.bookmarks = []
@@ -52,7 +33,7 @@ class Model():
     def delete_by_names(self, names):
         self.bookmarks = [
             x for x in self.bookmarks
-            if x.get('name') not in names
+            if x.get('name') not in [n.replace('***', '') for n in names]
         ]
     
     def create(self, bm):
@@ -84,13 +65,19 @@ def update_tree(*args):
         ]
 
     tree.delete(*tree.get_children())
+    tree.tag_configure('missing', background='red')
 
     for b in working_list:
-        tree.insert('', 'end', text=b['name'])
+        missing = ''
+        if not os.path.exists(b['filepath']):
+            print(f'{b["name"]} MISSING')
+            missing = '***'
+        tree.insert('', 'end', text=missing + b['name'])
 
     items_left = tree.get_children()
     if not items_left:
         return
+    
     
     tree.selection_set(items_left[0])
 
