@@ -82,19 +82,29 @@ def update_tree(*args):
 
 def select_next(event):
     """select the next item in the treeview"""
-    tree.selection_set(
-        tree.next(
-            tree.selection()[0]
+    try:
+        tree.selection_set(
+            tree.next(
+                tree.selection()[0]
+            )
         )
-    )
+    except:
+        tree.selection_set(
+            tree.get_children()[0]
+        )
 
 def select_prev(event):
     """select the previous item in the treeview"""
-    tree.selection_set(
-        tree.prev(
-            tree.selection()[0]
+    try:
+        tree.selection_set(
+            tree.prev(
+                tree.selection()[0]
+            )
         )
-    )
+    except:
+        tree.selection_set(
+            tree.get_children()[0]
+        )
 
 def create():
     print('create')
