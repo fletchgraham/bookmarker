@@ -267,6 +267,7 @@ for btn in btns:
 fr_buttons.pack(fill=tk.X)
 
 search_field.pack(fill=tk.X)
+search_field.focus()
 
 tree.pack(expand=True, fill=tk.BOTH)
 update_tree()
