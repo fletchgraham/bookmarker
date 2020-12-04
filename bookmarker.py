@@ -81,6 +81,12 @@ def update_tree(*args):
     
     tree.selection_set(items_left[0])
 
+def select_next(event):
+    print('select next')
+
+def select_prev(event):
+    print('select previous')
+
 def create():
     print('create')
     bm = {}
@@ -233,6 +239,11 @@ window.bind("<Return>", open_file)
 window.bind("<Shift_L><Return>", open_location)
 window.bind("<Shift_R><Return>", open_location)
 window.bind("<F2>", edit)
+
+window.bind("<Up>", select_prev)
+window.bind("<Right>", select_next)
+window.bind("<Down>", select_next)
+window.bind("<Left>", select_prev)
 
 btns = [
     btn_open,
